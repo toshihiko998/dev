@@ -16,7 +16,7 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 INPUT_DIR.mkdir(exist_ok=True)
 
 
-def run_rife_interpolation(image1, image2, num_frames, fps):
+def run_rife_interpolation(image1, image2, num_frames, fps, save_path):
     """RIFE補間を実行"""
     try:
         from PIL import Image
@@ -64,12 +64,17 @@ def run_rife_interpolation(image1, image2, num_frames, fps):
         
         if result.returncode == 0:
             if output_path.exists():
-                # タイムスタンプ付きファイル名で保存（ダウンロード用）
-                timestamp = time.strftime("%Y%m%d_%H%M%S")
-                download_path = OUTPUT_DIR / f"rife_{timestamp}.mp4"
+                # ユーザー指定の保存パス、または自動生成
                 import shutil
+                if save_path and save_path.strip():
+                    download_path = Path(save_path.strip())
+                    download_path.parent.mkdir(parents=True, exist_ok=True)
+                else:
+                    timestamp = time.strftime("%Y%m%d_%H%M%S")
+                    download_path = OUTPUT_DIR / f"rife_{timestamp}.mp4"
+                
                 shutil.copy(output_path, download_path)
-                return str(download_path), f"✓ 成功!\n\n処理時間: {elapsed}秒\n\n{result.stdout}"
+                return str(download_path), f"✓ 成功!\n\n保存先: {download_path}\n処理時間: {elapsed}秒\n\n{result.stdout}"
             else:
                 return None, f"❌ 動画ファイルが生成されませんでした\n\n{result.stdout}"
         else:
@@ -102,17 +107,25 @@ with gr.Blocks(title="RIFE フレーム補間") as app:
             num_frames = gr.Slider(4, 32, value=16, step=4, label="フレーム数")
             fps = gr.Slider(8, 30, value=16, step=1, label="FPS")
             
+            gr.Markdown("### 💾 保存先")
+            save_path = gr.Textbox(
+                label="保存先パス (空欄=自動生成)",
+                placeholder="例: /workspaces/dev/my_video.mp4 または C:\\Users\\name\\video.mp4",
+                value=""
+            )
+            
             btn = gr.Button("⚡ 高速生成", variant="primary", size="lg")
         
         with gr.Column():
             gr.Markdown("### 出力")
-            output_video = gr.Video(label="生成動画")
+            output_video = gr.Video(label="生成動画プレビュー")
             status = gr.Textbox(label="ステータス", lines=10)
+            download_btn = gr.File(label="📥 ダウンロード")
     
     btn.click(
         fn=run_rife_interpolation,
-        inputs=[image1, image2, num_frames, fps],
-        outputs=[output_video, status]
+        inputs=[image1, image2, num_frames, fps, save_path],
+        outputs=[download_btn, status]
     )
     
     gr.Markdown("""

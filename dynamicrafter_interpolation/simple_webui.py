@@ -15,7 +15,7 @@ INPUT_DIR = Path(__file__).parent / "input_images"
 OUTPUT_DIR.mkdir(exist_ok=True)
 INPUT_DIR.mkdir(exist_ok=True)
 
-def run_interpolation(image1, image2, num_frames, fps, mode, pan_x, pan_y, zoom, rotate):
+def run_interpolation(image1, image2, num_frames, fps, mode, pan_x, pan_y, zoom, rotate, save_path):
     """中割処理を実行"""
     try:
         # 画像を保存
@@ -100,15 +100,20 @@ def run_interpolation(image1, image2, num_frames, fps, mode, pan_x, pan_y, zoom,
             if poll is not None:
                 # プロセス終了
                 if poll == 0 and output_path.exists():
-                    # タイムスタンプ付きファイル名で保存（ダウンロード用）
+                    # ユーザー指定の保存パス、または自動生成
                     import shutil
-                    timestamp = time.strftime("%Y%m%d_%H%M%S")
-                    download_path = OUTPUT_DIR / f"{mode}_{timestamp}.mp4"
+                    if save_path and save_path.strip():
+                        download_path = Path(save_path.strip())
+                        download_path.parent.mkdir(parents=True, exist_ok=True)
+                    else:
+                        timestamp = time.strftime("%Y%m%d_%H%M%S")
+                        download_path = OUTPUT_DIR / f"{mode}_{timestamp}.mp4"
+                    
                     shutil.copy(output_path, download_path)
                     
                     status_file.write_text("completed")
                     log_content = log_file.read_text()[-2000:] if log_file.exists() else ""
-                    return str(download_path), f"✓ 成功!\n\n処理時間: {elapsed//60}分{elapsed%60}秒\n\n{log_content}"
+                    return str(download_path), f"✓ 成功!\n\n保存先: {download_path}\n処理時間: {elapsed//60}分{elapsed%60}秒\n\n{log_content}"
                 else:
                     status_file.write_text("failed")
                     log_content = log_file.read_text()[-2000:] if log_file.exists() else ""
@@ -170,17 +175,25 @@ with gr.Blocks(title="DynamiCrafter WebUI") as app:
                 zoom = gr.Slider(0.5, 2, value=1, step=0.1, label="ズーム")
                 rotate = gr.Slider(-180, 180, value=0, step=15, label="回転")
             
+            gr.Markdown("### 💾 保存先")
+            save_path = gr.Textbox(
+                label="保存先パス (空欄=自動生成)",
+                placeholder="例: /workspaces/dev/my_video.mp4 または C:\\Users\\name\\video.mp4",
+                value=""
+            )
+            
             btn = gr.Button("🎬 生成", variant="primary", size="lg")
         
         with gr.Column():
             gr.Markdown("### 出力")
-            output_video = gr.Video(label="生成動画")
+            output_video = gr.Video(label="生成動画プレビュー")
             status = gr.Textbox(label="ステータス", lines=10)
+            download_btn = gr.File(label="📥 ダウンロード")
     
     btn.click(
         fn=run_interpolation,
-        inputs=[image1, image2, num_frames, fps, mode, pan_x, pan_y, zoom, rotate],
-        outputs=[output_video, status]
+        inputs=[image1, image2, num_frames, fps, mode, pan_x, pan_y, zoom, rotate, save_path],
+        outputs=[download_btn, status]
     )
     
     gr.Markdown("""
