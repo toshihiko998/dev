@@ -359,9 +359,17 @@ if __name__ == "__main__":
     print()
     
     app = create_ui()
+    
+    # Codespace/外部アクセス用の設定
+    import socket
+    hostname = socket.gethostname()
+    print(f"🌍 ホスト名: {hostname}")
+    
     app.launch(
         server_name="0.0.0.0",  # すべてのインターフェースでリッスン
         server_port=7860,
-        share=False,  # 公開リンクを生成する場合はTrue
-        show_error=True
+        share=False,
+        show_error=True,
+        allowed_paths=[str(Path(__file__).parent / "output_videos")],
+        root_path=os.environ.get("GRADIO_ROOT_PATH", "")  # Codespace対応
     )
