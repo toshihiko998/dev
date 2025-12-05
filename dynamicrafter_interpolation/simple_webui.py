@@ -39,24 +39,25 @@ def run_interpolation(image1, image2, num_frames, fps, mode, pan_x, pan_y, zoom,
         
         # コマンド構築
         dynamicrafter_dir = Path(__file__).parent.parent / "DynamiCrafter"
+        interp_dir = Path(__file__).parent
         
         if mode == "basic":
-            script_path = Path(__file__).parent / "interpolate.py"
+            script_path = interp_dir / "interpolate.py"
             cmd = [
                 "python3", str(script_path),
-                "--image1", str(img1_path),
-                "--image2", str(img2_path),
-                "--output", str(output_path),
+                "--image1", str(img1_path.resolve()),
+                "--image2", str(img2_path.resolve()),
+                "--output", str(output_path.resolve()),
                 "--frames", str(num_frames),
                 "--fps", str(fps)
             ]
         else:
-            script_path = Path(__file__).parent / "advanced_interpolate.py"
+            script_path = interp_dir / "advanced_interpolate.py"
             cmd = [
                 "python3", str(script_path),
-                "--image1", str(img1_path),
-                "--image2", str(img2_path),
-                "--output", str(output_path),
+                "--image1", str(img1_path.resolve()),
+                "--image2", str(img2_path.resolve()),
+                "--output", str(output_path.resolve()),
                 "--frames", str(num_frames),
                 "--fps", str(fps),
                 "--mode", mode,
@@ -66,7 +67,7 @@ def run_interpolation(image1, image2, num_frames, fps, mode, pan_x, pan_y, zoom,
                 "--rotate", str(rotate)
             ]
         
-        # 実行
+        # 実行（DynamiCrafterディレクトリから実行）
         result = subprocess.run(
             cmd,
             cwd=str(dynamicrafter_dir),
