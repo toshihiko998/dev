@@ -12,16 +12,26 @@ DynamiCrafter + Steerable-Motion統合中割りシステム
 - 複数の中割り手法の切り替え
 """
 import os
+import sys
 import argparse
 import torch
 import numpy as np
 from PIL import Image
 import torchvision.transforms as transforms
 from einops import repeat, rearrange
-import torchvision
 from pathlib import Path
 from typing import Optional, List, Tuple, Dict
+import torchvision
 import cv2
+
+# DynamiCrafterのモジュールパスを追加
+SCRIPT_DIR = Path(__file__).parent
+DYNAMICRAFTER_DIR = SCRIPT_DIR.parent / "DynamiCrafter"
+if DYNAMICRAFTER_DIR.exists():
+    sys.path.insert(0, str(DYNAMICRAFTER_DIR))
+else:
+    print(f"警告: DynamiCrafterディレクトリが見つかりません: {DYNAMICRAFTER_DIR}")
+    print("このスクリプトは /workspaces/dev/DynamiCrafter ディレクトリから実行してください")
 
 
 class MotionController:

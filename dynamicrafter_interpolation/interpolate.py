@@ -2,6 +2,7 @@
 DynamiCrafterを使った2枚の静止画から中割りフレームを生成するシステム
 """
 import os
+import sys
 import argparse
 import torch
 import numpy as np
@@ -10,6 +11,15 @@ import torchvision.transforms as transforms
 from einops import repeat
 import torchvision
 from pathlib import Path
+
+# DynamiCrafterのモジュールパスを追加
+SCRIPT_DIR = Path(__file__).parent
+DYNAMICRAFTER_DIR = SCRIPT_DIR.parent / "DynamiCrafter"
+if DYNAMICRAFTER_DIR.exists():
+    sys.path.insert(0, str(DYNAMICRAFTER_DIR))
+else:
+    print(f"警告: DynamiCrafterディレクトリが見つかりません: {DYNAMICRAFTER_DIR}")
+    print("このスクリプトは /workspaces/dev/DynamiCrafter ディレクトリから実行してください")
 
 
 class FrameInterpolator:
