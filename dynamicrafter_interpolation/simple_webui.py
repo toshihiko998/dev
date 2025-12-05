@@ -100,9 +100,15 @@ def run_interpolation(image1, image2, num_frames, fps, mode, pan_x, pan_y, zoom,
             if poll is not None:
                 # プロセス終了
                 if poll == 0 and output_path.exists():
+                    # タイムスタンプ付きファイル名で保存（ダウンロード用）
+                    import shutil
+                    timestamp = time.strftime("%Y%m%d_%H%M%S")
+                    download_path = OUTPUT_DIR / f"{mode}_{timestamp}.mp4"
+                    shutil.copy(output_path, download_path)
+                    
                     status_file.write_text("completed")
                     log_content = log_file.read_text()[-2000:] if log_file.exists() else ""
-                    return str(output_path), f"✓ 成功!\n\n処理時間: {elapsed//60}分{elapsed%60}秒\n\n{log_content}"
+                    return str(download_path), f"✓ 成功!\n\n処理時間: {elapsed//60}分{elapsed%60}秒\n\n{log_content}"
                 else:
                     status_file.write_text("failed")
                     log_content = log_file.read_text()[-2000:] if log_file.exists() else ""
@@ -184,6 +190,12 @@ with gr.Blocks(title="DynamiCrafter WebUI") as app:
     2. モードを選択（basic: 基本、hybrid/steerable: カメラワーク付き）
     3. フレーム数・FPSを設定
     4. 「生成」ボタンをクリック
+    5. **生成動画は自動でダウンロード可能** (動画プレビュー右下の📥ボタン)
+    
+    ### 💾 ローカル保存
+    - 生成動画は `output_videos/{mode}_YYYYMMDD_HHMMSS.mp4` として保存
+    - Gradioの動画プレビューから直接ダウンロード可能
+    - タイムスタンプ付きなので履歴管理も簡単
     
     ⚠️ **CPU版のため処理に時間がかかります**
     - 初回実行: CLIPモデルダウンロード（数分） + モデル読み込み（数分） + 生成処理（10-30分）

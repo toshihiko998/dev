@@ -64,7 +64,12 @@ def run_rife_interpolation(image1, image2, num_frames, fps):
         
         if result.returncode == 0:
             if output_path.exists():
-                return str(output_path), f"✓ 成功!\n\n処理時間: {elapsed}秒\n\n{result.stdout}"
+                # タイムスタンプ付きファイル名で保存（ダウンロード用）
+                timestamp = time.strftime("%Y%m%d_%H%M%S")
+                download_path = OUTPUT_DIR / f"rife_{timestamp}.mp4"
+                import shutil
+                shutil.copy(output_path, download_path)
+                return str(download_path), f"✓ 成功!\n\n処理時間: {elapsed}秒\n\n{result.stdout}"
             else:
                 return None, f"❌ 動画ファイルが生成されませんでした\n\n{result.stdout}"
         else:
@@ -116,6 +121,12 @@ with gr.Blocks(title="RIFE フレーム補間") as app:
     1. 開始・終了フレーム画像をアップロード
     2. フレーム数・FPSを設定
     3. 「高速生成」ボタンをクリック
+    4. **生成動画は自動でダウンロード可能** (動画プレビュー右下の📥ボタン)
+    
+    ### 💾 ローカル保存
+    - 生成動画は `output_videos/rife_YYYYMMDD_HHMMSS.mp4` として保存
+    - Gradioの動画プレビューから直接ダウンロード可能
+    - タイムスタンプ付きなので履歴管理も簡単
     
     ### ✨ RIFEの利点
     - ⚡ **超高速**: 1-2分で完了（CPUでも高速）
