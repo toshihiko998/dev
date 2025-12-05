@@ -50,8 +50,6 @@ class FrameInterpolator:
         cache_dir = Path(self.model_path).parent.parent / "hf_cache"
         cache_dir.mkdir(exist_ok=True)
         os.environ['HF_HOME'] = str(cache_dir)
-        os.environ['TRANSFORMERS_CACHE'] = str(cache_dir)
-        os.environ['HF_DATASETS_CACHE'] = str(cache_dir)
         
         try:
             from omegaconf import OmegaConf
