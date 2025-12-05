@@ -85,10 +85,11 @@ def run_interpolation(image1, image2, num_frames, fps, mode, pan_x, pan_y, zoom,
                 start_new_session=True  # 親プロセスから独立
             )
         
-        # 処理完了を待つ（最大30分、1分ごとにチェック）
+        # 処理完了を待つ（最大30分、10秒ごとにチェック）
         max_wait = 30 * 60  # 30分
-        check_interval = 60  # 1分
+        check_interval = 10  # 10秒
         elapsed = 0
+        last_log_size = 0
         
         while elapsed < max_wait:
             time.sleep(check_interval)
@@ -100,16 +101,33 @@ def run_interpolation(image1, image2, num_frames, fps, mode, pan_x, pan_y, zoom,
                 # プロセス終了
                 if poll == 0 and output_path.exists():
                     status_file.write_text("completed")
-                    log_content = log_file.read_text()[-2000:]  # 最後の2000文字
-                    return str(output_path), f"✓ 成功!\n\n処理時間: {elapsed//60}分\n\n{log_content}"
+                    log_content = log_file.read_text()[-2000:] if log_file.exists() else ""
+                    return str(output_path), f"✓ 成功!\n\n処理時間: {elapsed//60}分{elapsed%60}秒\n\n{log_content}"
                 else:
                     status_file.write_text("failed")
-                    log_content = log_file.read_text()[-2000:]
+                    log_content = log_file.read_text()[-2000:] if log_file.exists() else ""
                     return None, f"❌ エラー (code {poll})\n\n{log_content}"
             
-            # 進捗メッセージ
-            if elapsed % 300 == 0:  # 5分ごと
-                yield None, f"⏳ 処理中... ({elapsed//60}分経過)\n\nCPUモードのため時間がかかります。\nログ: {log_file}"
+            # リアルタイム進捗表示（10秒ごと）
+            minutes = elapsed // 60
+            seconds = elapsed % 60
+            
+            # ログファイルの最新部分を取得
+            log_preview = ""
+            if log_file.exists():
+                current_size = log_file.stat().st_size
+                if current_size > last_log_size:
+                    log_preview = "\n\n📝 最新ログ:\n" + log_file.read_text()[-500:]
+                    last_log_size = current_size
+            
+            status_msg = f"⏳ 処理中... {minutes}分{seconds}秒経過\n\n"
+            status_msg += f"モード: {mode}\n"
+            status_msg += f"フレーム数: {num_frames}\n"
+            status_msg += f"出力先: {output_path}\n"
+            status_msg += f"ログファイル: {log_file}"
+            status_msg += log_preview
+            
+            yield None, status_msg
         
         # タイムアウト
         process.terminate()
