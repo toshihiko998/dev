@@ -47,7 +47,7 @@ def run_interpolation(image1, image2, num_frames, fps, mode, pan_x, pan_y, zoom,
                 "--image1", str(img1_path),
                 "--image2", str(img2_path),
                 "--output", str(output_path),
-                "--num_frames", str(num_frames),
+                "--frames", str(num_frames),
                 "--fps", str(fps)
             ]
         else:
@@ -57,7 +57,7 @@ def run_interpolation(image1, image2, num_frames, fps, mode, pan_x, pan_y, zoom,
                 "--image1", str(img1_path),
                 "--image2", str(img2_path),
                 "--output", str(output_path),
-                "--num_frames", str(num_frames),
+                "--frames", str(num_frames),
                 "--fps", str(fps),
                 "--mode", mode,
                 "--pan-x", str(pan_x),
