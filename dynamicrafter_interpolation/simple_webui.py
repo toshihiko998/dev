@@ -67,26 +67,55 @@ def run_interpolation(image1, image2, num_frames, fps, mode, pan_x, pan_y, zoom,
                 "--rotate", str(rotate)
             ]
         
-        # 実行（DynamiCrafterディレクトリから実行）
-        # CPU版は処理に時間がかかるため、タイムアウトを30分に設定
-        result = subprocess.run(
-            cmd,
-            cwd=str(dynamicrafter_dir),
-            capture_output=True,
-            text=True,
-            timeout=1800  # 30分
-        )
+        # バックグラウンドで実行（タイムアウトなし）
+        import time
+        log_file = OUTPUT_DIR / "processing.log"
+        status_file = OUTPUT_DIR / "status.txt"
         
-        if result.returncode == 0:
-            if output_path.exists():
-                return str(output_path), f"✓ 成功!\n\n生成: {output_path}\n\n{result.stdout}"
-            else:
-                return None, f"❌ 動画ファイルが生成されませんでした\n\n{result.stdout}\n{result.stderr}"
-        else:
-            return None, f"❌ エラー (code {result.returncode})\n\n{result.stderr}\n\n{result.stdout}"
+        # ステータスファイルを初期化
+        status_file.write_text("processing")
+        
+        # バックグラウンド実行
+        with open(log_file, 'w') as log:
+            process = subprocess.Popen(
+                cmd,
+                cwd=str(dynamicrafter_dir),
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                start_new_session=True  # 親プロセスから独立
+            )
+        
+        # 処理完了を待つ（最大30分、1分ごとにチェック）
+        max_wait = 30 * 60  # 30分
+        check_interval = 60  # 1分
+        elapsed = 0
+        
+        while elapsed < max_wait:
+            time.sleep(check_interval)
+            elapsed += check_interval
             
-    except subprocess.TimeoutExpired:
-        return None, "❌ タイムアウト: 処理に30分以上かかりました。CPUモードのため時間がかかります。"
+            # プロセス終了チェック
+            poll = process.poll()
+            if poll is not None:
+                # プロセス終了
+                if poll == 0 and output_path.exists():
+                    status_file.write_text("completed")
+                    log_content = log_file.read_text()[-2000:]  # 最後の2000文字
+                    return str(output_path), f"✓ 成功!\n\n処理時間: {elapsed//60}分\n\n{log_content}"
+                else:
+                    status_file.write_text("failed")
+                    log_content = log_file.read_text()[-2000:]
+                    return None, f"❌ エラー (code {poll})\n\n{log_content}"
+            
+            # 進捗メッセージ
+            if elapsed % 300 == 0:  # 5分ごと
+                yield None, f"⏳ 処理中... ({elapsed//60}分経過)\n\nCPUモードのため時間がかかります。\nログ: {log_file}"
+        
+        # タイムアウト
+        process.terminate()
+        status_file.write_text("timeout")
+        return None, f"❌ タイムアウト: 30分以上かかりました\n\nログ: {log_file}"
+            
     except Exception as e:
         import traceback
         return None, f"❌ エラー: {str(e)}\n\n{traceback.format_exc()}"
