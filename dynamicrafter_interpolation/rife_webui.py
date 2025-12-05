@@ -16,7 +16,8 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 INPUT_DIR.mkdir(exist_ok=True)
 
 
-def run_rife_interpolation(image1, image2, num_frames, fps, save_path):
+def run_rife_interpolation(image1, image2, num_frames, fps, save_path, mode, 
+                          pan_x, pan_y, zoom, rotate):
     """RIFE補間を実行"""
     try:
         from PIL import Image
@@ -48,7 +49,12 @@ def run_rife_interpolation(image1, image2, num_frames, fps, save_path):
             "--output", str(output_path),
             "--frames", str(num_frames),
             "--fps", str(fps),
-            "--device", "cpu"
+            "--device", "cpu",
+            "--mode", mode,
+            "--pan-x", str(pan_x),
+            "--pan-y", str(pan_y),
+            "--zoom", str(zoom),
+            "--rotate", str(rotate)
         ]
         
         start_time = time.time()
@@ -71,7 +77,7 @@ def run_rife_interpolation(image1, image2, num_frames, fps, save_path):
                     download_path.parent.mkdir(parents=True, exist_ok=True)
                 else:
                     timestamp = time.strftime("%Y%m%d_%H%M%S")
-                    download_path = OUTPUT_DIR / f"rife_{timestamp}.mp4"
+                    download_path = OUTPUT_DIR / f"rife_{mode}_{timestamp}.mp4"
                 
                 shutil.copy(output_path, download_path)
                 return str(download_path), f"✓ 成功!\n\n保存先: {download_path}\n処理時間: {elapsed}秒\n\n{result.stdout}"
@@ -107,6 +113,21 @@ with gr.Blocks(title="RIFE フレーム補間") as app:
             num_frames = gr.Slider(4, 32, value=16, step=4, label="フレーム数")
             fps = gr.Slider(8, 30, value=16, step=1, label="FPS")
             
+            mode = gr.Radio(
+                choices=["basic", "hybrid", "steerable"],
+                value="basic",
+                label="モード",
+                info="basic: 基本 | hybrid: 終了フレーム変換 | steerable: 段階的モーション"
+            )
+            
+            with gr.Accordion("🎥 カメラワーク (hybrid/steerable時のみ)", open=False):
+                with gr.Row():
+                    pan_x = gr.Slider(-1, 1, value=0, step=0.1, label="パン X")
+                    pan_y = gr.Slider(-1, 1, value=0, step=0.1, label="パン Y")
+                with gr.Row():
+                    zoom = gr.Slider(0.5, 2, value=1, step=0.1, label="ズーム")
+                    rotate = gr.Slider(-180, 180, value=0, step=15, label="回転")
+            
             gr.Markdown("### 💾 保存先")
             save_path = gr.Textbox(
                 label="保存先パス (空欄=自動生成)",
@@ -124,7 +145,7 @@ with gr.Blocks(title="RIFE フレーム補間") as app:
     
     btn.click(
         fn=run_rife_interpolation,
-        inputs=[image1, image2, num_frames, fps, save_path],
+        inputs=[image1, image2, num_frames, fps, save_path, mode, pan_x, pan_y, zoom, rotate],
         outputs=[download_btn, status]
     )
     
@@ -132,20 +153,25 @@ with gr.Blocks(title="RIFE フレーム補間") as app:
     ---
     ### 💡 使い方
     1. 開始・終了フレーム画像をアップロード
-    2. フレーム数・FPSを設定
-    3. 「高速生成」ボタンをクリック
-    4. **生成動画は自動でダウンロード可能** (動画プレビュー右下の📥ボタン)
+    2. モードを選択
+       - **basic**: 基本的な補間のみ
+       - **hybrid**: 終了フレームにモーション適用してから補間
+       - **steerable**: 各フレームに段階的なモーション適用
+    3. hybrid/steerableの場合、カメラワークを設定
+    4. 「高速生成」ボタンをクリック
+    5. **📥ダウンロードボタンからローカルに保存**
     
-    ### 💾 ローカル保存
-    - 生成動画は `output_videos/rife_YYYYMMDD_HHMMSS.mp4` として保存
-    - Gradioの動画プレビューから直接ダウンロード可能
-    - タイムスタンプ付きなので履歴管理も簡単
+    ### 🎥 モーション制御
+    - **パン X/Y**: カメラの水平/垂直移動 (-1 〜 1)
+    - **ズーム**: カメラのズームイン/アウト (0.5 〜 2.0)
+    - **回転**: カメラの回転 (-180° 〜 180°)
     
     ### ✨ RIFEの利点
     - ⚡ **超高速**: 1-2分で完了（CPUでも高速）
     - 🪶 **超軽量**: モデルサイズ30MB
     - 🎨 **高品質**: 最先端の補間アルゴリズム
     - 💻 **低リソース**: メモリ使用量が少ない
+    - 🎬 **モーション制御**: DynamiCrafter同様のカメラワーク
     
     ### 📊 比較
     | 項目 | RIFE | DynamiCrafter |
@@ -154,6 +180,7 @@ with gr.Blocks(title="RIFE フレーム補間") as app:
     | 処理時間(CPU) | 1-2分 | 10-30分 |
     | メモリ使用量 | ~1GB | ~8GB |
     | 品質 | 高 | 非常に高 |
+    | モーション制御 | ✅ | ✅ |
     """)
 
 if __name__ == "__main__":
