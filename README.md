@@ -1,3 +1,42 @@
+# dev
+
+## プロジェクト
+
+### DynamiCrafter + Steerable-Motion 統合中割りシステム
+
+2枚の静止画から高品質な中割りフレームを生成する次世代AIシステムです。
+
+📁 **場所**: `dynamicrafter_interpolation/`
+
+🚀 **クイックスタート**: 
+```bash
+cd dynamicrafter_interpolation
+bash setup.sh
+```
+
+📖 **ドキュメント**: 
+- [README.md](dynamicrafter_interpolation/README.md) - 完全ガイド
+- [QUICKSTART.md](dynamicrafter_interpolation/QUICKSTART.md) - 最速スタート
+
+✨ **主な機能**:
+- **DynamiCrafter**: 高品質なフレーム生成
+- **Steerable-Motion**: カメラモーション制御（パン、ズーム、回転）
+- **3つのモード**: シンプル / Steerable / ハイブリッド
+- **簡単なCLI**: コマンドライン1行で実行
+- **豊富な例**: 7種類の高度な使用例を提供
+
+🎯 **使用例**:
+```bash
+# シンプルな中割り
+python interpolate.py --image1 img1.jpg --image2 img2.jpg
+
+# モーション制御付き
+python advanced_interpolate.py --image1 img1.jpg --image2 img2.jpg \
+  --camera-pan-x 0.5 --camera-zoom 0.8 --prompt "cinematic movement"
+```
+
+---
+
 # What is this?
 
 The github.dev web-based editor is a lightweight editing experience that runs entirely in your browser. You can navigate files and source code repositories from GitHub, and make and commit code changes.

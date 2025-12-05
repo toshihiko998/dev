@@ -1,0 +1,28 @@
+# DynamiCrafter Frame Interpolation System Requirements
+
+# Core dependencies
+torch>=2.0.0
+torchvision>=0.15.0
+numpy>=1.24.0
+pillow>=9.5.0
+einops>=0.6.1
+omegaconf>=2.3.0
+pytorch-lightning>=2.0.0
+
+# DynamiCrafter specific
+diffusers>=0.21.0
+transformers>=4.30.0
+huggingface-hub>=0.16.0
+
+# Video processing
+opencv-python>=4.7.0
+imageio>=2.31.0
+imageio-ffmpeg>=0.4.8
+
+# Additional utilities
+tqdm>=4.65.0
+scipy>=1.10.0
+scikit-image>=0.21.0
+
+# Optional: for better performance
+xformers>=0.0.20  # Optional: for memory-efficient attention
