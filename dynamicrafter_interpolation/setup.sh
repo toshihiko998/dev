@@ -28,7 +28,11 @@ echo ""
 echo "[2/4] DynamiCrafterの依存関係をインストール..."
 cd "$WORKSPACE_DIR/DynamiCrafter"
 if [ -f "requirements.txt" ]; then
-    pip install -r requirements.txt
+    echo "主要な依存関係をインストール中..."
+    pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118 || pip install torch torchvision
+    pip install omegaconf einops pytorch-lightning transformers diffusers
+    pip install opencv-python imageio imageio-ffmpeg pillow
+    pip install decord || echo "警告: decordのインストールに失敗しました（オプション）"
     echo "✓ DynamiCrafterの依存関係をインストールしました"
 fi
 
