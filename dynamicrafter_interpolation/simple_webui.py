@@ -68,12 +68,13 @@ def run_interpolation(image1, image2, num_frames, fps, mode, pan_x, pan_y, zoom,
             ]
         
         # 実行（DynamiCrafterディレクトリから実行）
+        # CPU版は処理に時間がかかるため、タイムアウトを30分に設定
         result = subprocess.run(
             cmd,
             cwd=str(dynamicrafter_dir),
             capture_output=True,
             text=True,
-            timeout=300
+            timeout=1800  # 30分
         )
         
         if result.returncode == 0:
@@ -85,7 +86,7 @@ def run_interpolation(image1, image2, num_frames, fps, mode, pan_x, pan_y, zoom,
             return None, f"❌ エラー (code {result.returncode})\n\n{result.stderr}\n\n{result.stdout}"
             
     except subprocess.TimeoutExpired:
-        return None, "❌ タイムアウト: 処理に5分以上かかりました"
+        return None, "❌ タイムアウト: 処理に30分以上かかりました。CPUモードのため時間がかかります。"
     except Exception as e:
         import traceback
         return None, f"❌ エラー: {str(e)}\n\n{traceback.format_exc()}"
@@ -137,7 +138,15 @@ with gr.Blocks(title="DynamiCrafter WebUI") as app:
     3. フレーム数・FPSを設定
     4. 「生成」ボタンをクリック
     
-    ⚠️ 初回実行時はモデル読み込みに時間がかかります（数分）
+    ⚠️ **CPU版のため処理に時間がかかります**
+    - 初回実行: CLIPモデルダウンロード（数分） + モデル読み込み（数分） + 生成処理（10-30分）
+    - 2回目以降: モデル読み込み（数分） + 生成処理（10-30分）
+    - フレーム数が多いほど時間がかかります（8フレーム推奨）
+    
+    💡 **ヒント**:
+    - 処理中はブラウザを閉じないでください
+    - タイムアウトは30分に設定されています
+    - エラーが出た場合はフレーム数を減らしてください
     """)
 
 if __name__ == "__main__":
