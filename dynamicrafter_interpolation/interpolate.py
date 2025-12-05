@@ -46,6 +46,13 @@ class FrameInterpolator:
         """
         DynamiCrafterモデルのセットアップ
         """
+        # HuggingFaceキャッシュをDynamiCrafterディレクトリ内に設定（ディスク容量節約）
+        cache_dir = Path(self.model_path).parent.parent / "hf_cache"
+        cache_dir.mkdir(exist_ok=True)
+        os.environ['HF_HOME'] = str(cache_dir)
+        os.environ['TRANSFORMERS_CACHE'] = str(cache_dir)
+        os.environ['HF_DATASETS_CACHE'] = str(cache_dir)
+        
         try:
             from omegaconf import OmegaConf
             from utils.utils import instantiate_from_config
